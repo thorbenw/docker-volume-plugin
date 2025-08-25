@@ -14,4 +14,5 @@ RUN set -ex \
 FROM alpine:3.20.2
 COPY --from=builder /go/bin/docker-volume-plugin .
 COPY --from=builder /go/bin/testVolumeProcess .
+COPY config.json /etc
 CMD ["/docker-volume-plugin"]

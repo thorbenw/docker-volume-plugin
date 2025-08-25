@@ -132,7 +132,10 @@ image_name="$image_name:$image_tag"
 unset image_tag
 
 echo "Starting build to image [$image_name]."
+cp config.json ./src || exit $?
 docker build -t "$image_name" --build-arg MODULE_VERSION="$version_string" --progress plain ./src || exit $?
+rm ./src/config.json || exit $?
+
 id=$(docker create "$image_name" true)
 if [ -z "$id" ]; then
     echo "Failed to create container or to get it's id."

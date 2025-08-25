@@ -14,7 +14,85 @@ and others.
 # Basic features
 - Version 2.0 Docker plugin
 - No 3rd party package dependencies
-- Supports "volume processes" (see below)
+- Supports "volume processes" (see below in [Usage](#usage))
+
+# Installation
+Plugins can be set up by either `docker plugin create` or `docker plugin pull`.
+Due to this repository providing source code only, this documentation focuses on
+the `docker plugin create` command. However, find further information on `docker
+plugin pull` below.
+
+For installing a plugin with `docker plugin create`, you need a file
+`config.json`, which already exists in this repository, and a folder `./rootfs`
+containing the root file system fir the plugin. To create that folder, run
+the build script from the repository root. Due to using the `docker` command a
+lot to e.g. build a temporary image from the `Dockerfile`, you will likely need
+root privileges:
+```
+sudo ./build.sh
+```
+The build script can also create a docker image or a compressed tarball (`tgz`).
+No matter which type of output is created by the build script, it will always
+contain a copy the `config.json` file in it's `/etc` folder. This is useful for
+specific deployment scenarios.
+
+To finally install the plugin, make up a name for it, get root privileges and
+issue:
+```
+docker plugin create "<plugin_name>"
+docker plugin enable "<plugin_name>"
+```
+
+## Deployment Options
+Once the plugin has been installed on a machine, it can be deployed to further
+machines in different ways.
+
+### Deploy as a Plugin
+Once the plugin has been installed on a machine, you can use `docker plugin
+push` to have it in docker hub and then install it on fruther machines using
+`docker plugin pull`. The is the standard way to deploy a plugin, but of course
+requires a docker hub account.
+
+### Deploy an Image
+Create an image, push it to a registry and pull it to other machines. Then,
+create a container, export it to a `rootfs` folder, move the `config.json` file
+out of the `./rootfs/etc` folder to the same location as `rootfs`, create the
+plugin and delete the container and the image.
+
+```
+# - Make sure you have root privileges.
+# - Replace <image:tag> with the tag of your image.
+
+mkdir -p /tmp/plugin-install
+cd /tmp/plugin-install
+docker pull <image:tag>
+id=$(docker create "<image:tag>" true)
+mkdir ./rootfs
+docker export "$id" | tar -x -C "./rootfs"
+docker rm -vf "$id"
+docker rmi "<image:tag>"
+mv ./rootfs/etc/config.json ./
+
+# You can now use 'docker plugin create', see above.
+```
+
+### Deploy a tarball
+This is quite similar to deploying an image, except you copy the tarball to a
+machine instead of pulling the image and then decompress the file to the
+`rootfs` folder.
+
+This option hasn't been used nor tested so far, but maybe someone finds it
+useful.
+```
+mkdir -p /tmp/plugin-install
+cd /tmp/plugin-install
+# Now copy your <plugin.tgz> file here.
+gzip -d "plugin.tgz" | tar  -x -C "./rootfs"
+# Delete the tarball.
+mv ./rootfs/etc/config.json ./
+
+# You can now use 'docker plugin create', see above.
+```
 
 # Usage
 
