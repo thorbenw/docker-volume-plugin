@@ -95,7 +95,7 @@ func Test_init(t *testing.T) {
 		assert.Assert(t, ProcessStatusNamesContains(Idle))
 	}
 
-	if linux_1, err := semver.Parse("1"); err != nil {
+	if linux_1, err := semver.Parse("1", false); err != nil {
 		t.Error(err)
 	} else {
 		if err := loadProcessStatusNames(linux_1); err != nil {
@@ -112,7 +112,7 @@ func Test_init(t *testing.T) {
 		}
 	}
 
-	if linux_2_6_15, err := semver.Parse("2.6.15"); err != nil {
+	if linux_2_6_15, err := semver.Parse("2.6.15", false); err != nil {
 		t.Error(err)
 	} else {
 		if err := loadProcessStatusNames(linux_2_6_15); err != nil {
@@ -129,7 +129,7 @@ func Test_init(t *testing.T) {
 		}
 	}
 
-	if linux_3, err := semver.Parse("3"); err != nil {
+	if linux_3, err := semver.Parse("3", false); err != nil {
 		t.Error(err)
 	} else {
 		if err := loadProcessStatusNames(linux_3); err != nil {
@@ -150,7 +150,7 @@ func Test_init(t *testing.T) {
 		}
 	}
 
-	if linux_3_11, err := semver.Parse("3.11"); err != nil {
+	if linux_3_11, err := semver.Parse("3.11", false); err != nil {
 		t.Error(err)
 	} else {
 		if err := loadProcessStatusNames(linux_3_11); err != nil {
@@ -173,7 +173,7 @@ func Test_init(t *testing.T) {
 		}
 	}
 
-	if linux_4, err := semver.Parse("4"); err != nil {
+	if linux_4, err := semver.Parse("4", false); err != nil {
 		t.Error(err)
 	} else {
 		if err := loadProcessStatusNames(linux_4); err != nil {

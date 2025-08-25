@@ -11,7 +11,8 @@ var logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{AddSou
 
 func TestParse(t *testing.T) {
 	type args struct {
-		v string
+		v     string
+		loose bool
 	}
 	tests := []struct {
 		name    string
@@ -22,11 +23,12 @@ func TestParse(t *testing.T) {
 		// Test cases.
 		{name: "Valid", args: args{v: "1.2.3-pre.4+build.5"}, want: &VersionInfo{Major: 1, Minor: 2, Patch: 3, PreRelease: []any{"pre", uint64(4)}, Build: []any{"build", uint64(5)}}, wantErr: false},
 		{name: "Invalid major version", args: args{v: "a.2.3-pre.4+build.5"}, want: nil, wantErr: true},
-		{name: "Invalid major version", args: args{v: "1.2.3.4-pre.4+build.5"}, want: nil, wantErr: true},
+		{name: "Too many digits", args: args{v: "1.2.3.4-pre.4+build.5"}, want: nil, wantErr: true},
+		{name: "Too many digits, but forgiving.", args: args{v: "1.2.3.4-pre.4+build.5", loose: true}, want: &VersionInfo{Major: 1, Minor: 2, Patch: 3, PreRelease: []any{"pre", uint64(4)}, Build: []any{"build", uint64(5)}}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Parse(tt.args.v)
+			got, err := Parse(tt.args.v, tt.args.loose)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)

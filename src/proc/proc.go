@@ -208,7 +208,7 @@ func loadUname() error {
 		return err
 	}
 
-	Release, err = semver.Parse(utils.Int8ToStr(uname.Release[:]))
+	Release, err = semver.Parse(utils.Int8ToStr(uname.Release[:]), true)
 	if err != nil {
 		return err
 	}
@@ -230,27 +230,27 @@ func loadProcessStatusNames(release *semver.VersionInfo) error {
 		release = Release
 	}
 
-	linux_2_6_0, err := semver.Parse("2.6.0")
+	linux_2_6_0, err := semver.Parse("2.6.0", false)
 	if err != nil {
 		return err
 	}
 
-	linux_2_6_33, err := semver.Parse("2.6.33")
+	linux_2_6_33, err := semver.Parse("2.6.33", false)
 	if err != nil {
 		return err
 	}
 
-	linux_3_9, err := semver.Parse("3.9")
+	linux_3_9, err := semver.Parse("3.9", false)
 	if err != nil {
 		return err
 	}
 
-	linux_3_13, err := semver.Parse("3.13")
+	linux_3_13, err := semver.Parse("3.13", false)
 	if err != nil {
 		return err
 	}
 
-	linux_4_14, err := semver.Parse("4.14")
+	linux_4_14, err := semver.Parse("4.14", false)
 	if err != nil {
 		return err
 	}

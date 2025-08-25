@@ -58,7 +58,7 @@ func MakeComparableSlice(in []any) (out []any) {
 	return
 }
 
-func Parse(v string) (*VersionInfo, error) {
+func Parse(v string, loose bool) (*VersionInfo, error) {
 	var result VersionInfo
 
 	slice := strings.SplitN(v, "+", 2)
@@ -83,6 +83,7 @@ func Parse(v string) (*VersionInfo, error) {
 		}
 	}
 
+	abort := false
 	for i, e := range strings.Split(slice[0], ".") {
 		if v, err := strconv.ParseUint(e, 10, 64); err != nil {
 			return nil, fmt.Errorf("version spec [%s] is invalid at position %d (`%s`)", slice[0], i, e)
@@ -95,8 +96,15 @@ func Parse(v string) (*VersionInfo, error) {
 			case 2:
 				result.Patch = v
 			default:
-				return nil, fmt.Errorf("version spec [%s] is invalid (more than 3 digits)", slice[0])
+				if loose {
+					abort = true
+				} else {
+					return nil, fmt.Errorf("version spec [%s] is invalid (more than 3 digits)", slice[0])
+				}
 			}
+		}
+		if abort {
+			break
 		}
 	}
 
