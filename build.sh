@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 # Usage: build.sh [path] [version]
 #
@@ -115,7 +115,7 @@ if command -v go >/dev/null; then
 
     cp -p "$cur_go_sum" "$tmp_go_sum"
     go_sum_hash_old="$(sha256sum -b ./src/go.sum)"
-    (cd ./src; go mod tidy)
+    (cd ./src || return; go mod tidy)
     go_sum_hash_new="$(sha256sum -b ./src/go.sum)"
     mv "$tmp_go_sum" "$cur_go_sum"
 

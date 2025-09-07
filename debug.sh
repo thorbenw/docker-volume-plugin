@@ -60,7 +60,7 @@ else
     echo "Current docker context is [$docker_context]."
 fi
 
-plugin_name="$( basename $( cd "$( dirname "$0" )" && pwd ) )"
+plugin_name="$( basename "$( cd "$( dirname "$0" )" && pwd )" )"
 plugin_name=${1:-$plugin_name}
 plugin_name=${plugin_name}:dev
 
@@ -79,12 +79,12 @@ if [ -z "$docker_container_daemon_log" ]; then
         default)
             ;;
         desktop-linux)
-            docker_container_daemon_logs="~/.docker/desktop/log/host/com.docker.backend.log $docker_container_daemon_logs" ;;
+            docker_container_daemon_logs="${HOME:?}/.docker/desktop/log/host/com.docker.backend.log $docker_container_daemon_logs" ;;
         *)
             echo "There are no specific default log files known for docker context [$docker_context]. Retaining generic defaults."
     esac
     for docker_container_daemon_log in $docker_container_daemon_logs; do
-        echo -n "Probing log file [$docker_container_daemon_log] ..."
+        printf "Probing log file [%s] ..." "$docker_container_daemon_log"
         if [ -f "$docker_container_daemon_log" ]; then
             echo " found."
             break
@@ -104,14 +104,14 @@ else
     fi
 fi
 if [ -z "$docker_container_daemon_log" ]; then
-    echo -n "There is no log file available for this debug session"
+    printf "There is no log file available for this debug session"
     if [ -z "$docker_container_daemon_log_require" ]; then
         echo " (continuing anyway)."
     else
         echo ". Aborting."; exit 2
     fi
 else
-    echo -n "Using log file [$docker_container_daemon_log]"
+    printf "Using log file [%s]" "$docker_container_daemon_log"
     if [ -z "$tail_nogrep" ]; then
         echo " (only printing plugin related lines)."
     else
@@ -151,7 +151,7 @@ docker plugin enable --timeout 5 "$plugin_name" >/dev/null
 res=$?
 if [ $res -gt 0 ]; then
     if [ -f "$docker_container_daemon_log" ]; then
-        cat "$docker_container_daemon_log" | grep $id
+        cat "$docker_container_daemon_log" | grep "$id"
     fi
     echo "Failed to enable plugin [$plugin_name]."
     exit $res
@@ -160,40 +160,40 @@ echo "Enabled  plugin [$plugin_name]."
 
 if [ -f "$docker_container_daemon_log" ]; then
     tail_pid_file=$(mktemp)
-    cat "$docker_container_daemon_log" | grep $id
+    cat "$docker_container_daemon_log" | grep "$id"
     if [ -z "$tail_nogrep" ]; then
-        ( tail -f -n 0 "$docker_container_daemon_log" & echo $! >"$tail_pid_file") | grep $id &
+        ( tail -f -n 0 "$docker_container_daemon_log" & echo $! >"$tail_pid_file") | grep "$id" &
     else
         ( tail -f -n 0 "$docker_container_daemon_log" & echo $! >"$tail_pid_file")
     fi
 fi
 
 export plugin_runtime_dir="/var/lib/docker/plugins/$id"
-export plugin_context=$docker_context
-export plugin_log=$docker_container_daemon_log
-export plugin_id=$id
-export plugin=$plugin_name
+export plugin_context="$docker_context"
+export plugin_log="$docker_container_daemon_log"
+export plugin_id="$id"
+export plugin="$plugin_name"
 prompt=${SHELL:-sh}
 lcd=$(pwd)
 if [ -d "$plugin_runtime_dir" ]; then
-    export PATH=$PATH:$lcd
-    cd "$plugin_runtime_dir"
+    export PATH="$PATH:$lcd"
+    cd "$plugin_runtime_dir" || exit $?
 else
     echo "Plugin runtime folder [$plugin_runtime_dir] is not accessible for the current user. Can neither change there nor alter PATH. Continuing anyway. "
 fi
 
-echo "\nTemporarily exported environment variables available during debug session:\n$(printenv | grep ^plugin)"
-echo "\nStarting shell [$prompt]. Type 'exit' to stop debugging. Use the \$plugin variable to refer to the plugin."
+printf "\nTemporarily exported environment variables available during debug session:\n%s" "$(printenv | grep ^plugin)"
+printf "\nStarting shell [%s]. Type 'exit' to stop debugging. Use the $plugin variable to refer to the plugin.\n" "$prompt"
 "$prompt"
 res=$?
-echo "Stopping shell [$prompt] to stop debugging and cleaning up state and processes."
-cd "$lcd"
+printf "Stopping shell [%s] to stop debugging and cleaning up state and processes.\n" "$prompt"
+cd "$lcd" || exit $?
 
 if [ -f "$tail_pid_file" ]; then
     tail_pid=$(cat "$tail_pid_file") || true
     rm "$tail_pid_file" || true
     echo "Terminating the tail process used to forward log file [$docker_container_daemon_log] to this console (pid=[$tail_pid])."
-    kill -15 $tail_pid || echo "Failed terminating the tail process. Continuing anyway!\n"
+    kill -15 "$tail_pid" || printf "Failed terminating the tail process. Continuing anyway!\n"
 fi
 
 if [ $res -gt 0 ]; then
